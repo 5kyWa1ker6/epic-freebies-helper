@@ -1,0 +1,60 @@
+name: GLM Free Key Check
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/glm-key-check.yml'
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Verify free GLM model with saved secret
+        env:
+          GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
+        shell: python
+        run: |
+          import os, json, urllib.request, urllib.error, sys
+          def report(message):
+              print(message)
+              with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+                  f.write(message + "\n")
+          key = os.environ.get("GLM_API_KEY", "").strip()
+          if not key:
+              report("FAIL: GLM_API_KEY secret is missing or empty.")
+              sys.exit(1)
+          payload = {
+              "model": "glm-4.6v-flash",
+              "messages": [{"role": "user", "content": "Reply with OK only."}],
+              "thinking": {"type": "disabled"},
+              "max_tokens": 16,
+              "stream": False,
+          }
+          req = urllib.request.Request(
+              "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+              data=json.dumps(payload).encode(),
+              headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"},
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=90) as response:
+                  result = json.load(response)
+              choices = result.get("choices", [])
+              if not choices or not choices[0].get("message", {}).get("content"):
+                  report("FAIL: API responded but returned no completion.")
+                  sys.exit(1)
+              report("PASS: saved GLM_API_KEY authenticated and glm-4.6v-flash returned a completion.")
+              report("Epic login and claiming were not attempted.")
+          except urllib.error.HTTPError as exc:
+              code = None
+              try:
+                  code = json.loads(exc.read()).get("error", {}).get("code")
+              except Exception:
+                  pass
+              safe_code = str(code) if str(code).isdigit() else "unavailable"
+              report(f"FAIL: GLM API HTTP {exc.code}; provider error code {safe_code}.")
+              sys.exit(1)
+          except Exception as exc:
+              report("FAIL: request could not complete (" + type(exc).__name__ + ").")
+              sys.exit(1)
