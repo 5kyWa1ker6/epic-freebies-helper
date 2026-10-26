@@ -1421,3 +1421,9 @@
 - Judgment: upstream runs weekly and defaults to glm-4.6v; explicit schedule and model settings are required.
 - Changed: .github/workflows/epic-gamer.yml, UTC 16:05 daily, glm-4.6v-flash for every model route, read-only contents permission and non-overlapping runs.
 - Result: configuration saved; first cloud run and actual library verification pending account Secrets setup.
+
+
+## 2026-10-26 - Isolated GLM credential check
+- Request: verify GLM key before Epic credentials are ready.
+- Change: .github/workflows/glm-key-check.yml calls only the official GLM endpoint with glm-4.6v-flash and a minimal completion; no checkout, Epic login, credential output, or artifacts.
+- Result: run 40323002545 stopped before API access because GLM_API_KEY was missing or empty. Key validity remains unverified.
