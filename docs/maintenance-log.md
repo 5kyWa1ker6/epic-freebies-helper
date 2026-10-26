@@ -1414,3 +1414,10 @@
   - 限流仍先发送包含失败原因的摘要，再返回 `rate_limited` 正常结束；不会把限流记为领取成功，其他领取异常仍保持失败。未改动登录、hCaptcha、浏览器或 checkout 业务逻辑，保留 `master` 的 `70354be` 浏览器修复。
   - 对最新 PR 代码完成静态复审，并核对 WXPush 上游 `/wxsend` 响应协议；Ruff、Black、Python 语法、工作流 YAML 和 `git diff --check` 检查通过。
   - 按仓库规则，本轮未执行测试或真实微信投递。新增文件包含 29 个测试定义，但仍缺少发送异常、双渠道调度及限流返回值的集成回归覆盖；不能将此前浏览器修复的 70 项测试结果视为本 PR 的验证结果。
+
+
+## 2026-10-26 - Personal daily free-model deployment
+- Request: claim daily at 00:05 Asia/Shanghai without paid model calls.
+- Judgment: upstream runs weekly and defaults to glm-4.6v; explicit schedule and model settings are required.
+- Changed: .github/workflows/epic-gamer.yml, UTC 16:05 daily, glm-4.6v-flash for every model route, read-only contents permission and non-overlapping runs.
+- Result: configuration saved; first cloud run and actual library verification pending account Secrets setup.
